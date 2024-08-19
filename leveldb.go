@@ -1,46 +1,28 @@
 package goframework_leveldb
 
 import (
-	"github.com/kordar/godb"
 	"github.com/kordar/goleveldb"
-	"github.com/kordar/gologger"
 )
 
-var (
-	leveldbpool = godb.NewDbPool()
-)
-
-func GetLevelDB(db string) *goleveldb.LevelDB {
-	return leveldbpool.Handle(db).(*goleveldb.LevelDB)
+type LevelDbIns struct {
+	name string
+	ins  *goleveldb.LevelDB
 }
 
-// InitLevelDbHandle 初始化LevelDb句柄
-func InitLevelDbHandle(dbs map[string]string) {
-	for db, filepath := range dbs {
-		ins := NewLevelDbIns(db, filepath)
-		if ins == nil {
-			continue
-		}
-		err := leveldbpool.Add(ins)
-		if err != nil {
-			logger.Warnf("初始化异常，err=%v", err)
-		}
-	}
-
+func NewLevelDbIns(name string, filepath string) *LevelDbIns {
+	levelDB := goleveldb.NewLevelDB(filepath)
+	return &LevelDbIns{name: name, ins: levelDB}
 }
 
-// AddLevelDbInstance 添加LevelDb句柄
-func AddLevelDbInstance(db string, filepath string) error {
-	ins := NewLevelDbIns(db, filepath)
-	return leveldbpool.Add(ins)
+func (c LevelDbIns) GetName() string {
+	return c.name
 }
 
-// RemoveLevelDbInstance 移除LevelDb句柄
-func RemoveLevelDbInstance(db string) {
-	leveldbpool.Remove(db)
+func (c LevelDbIns) GetInstance() interface{} {
+	return c.ins
 }
 
-// HasLevelDbInstance LevelDb句柄是否存在
-func HasLevelDbInstance(db string) bool {
-	return leveldbpool != nil && leveldbpool.Has(db)
+func (c LevelDbIns) Close() error {
+	c.ins.Close()
+	return nil
 }
